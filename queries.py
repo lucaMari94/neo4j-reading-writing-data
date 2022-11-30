@@ -219,10 +219,56 @@ nodes = session.run(query)
 for node in nodes:
     print(node)
 
+print('#############################################')
 
+# conditional
 # merge processing
+# ON MATCH
+query = "MERGE (p:Person {name: 'Robin Williams'}) " \
+        "ON MATCH " \
+        "SET p.died=2014 " \
+        "RETURN p"
+nodes = session.run(query)
+for node in nodes:
+    print(node)
 
-# add or updating a Movie
+# ON CREATE
+query = "MERGE (m:Movie {title: 'Freaky'}) " \
+        "ON CREATE " \
+        "SET m.released=2020 " \
+        "ON MATCH " \
+        "SET m.revenue=15920855 " \
+        "RETURN m"
+nodes = session.run(query)
+for node in nodes:
+    print(node)
+"""
+First execution: ON CREATE: 'released': 2020
+<Record m=<Node element_id='172' labels=frozenset({'Movie'}) properties={'title': 'Freaky', 'released': 2020}>>
+
+Second execution: ON MATCH: 'revenue': 15920855
+<Record m=<Node element_id='172' labels=frozenset({'Movie'}) properties={'revenue': 15920855, 'title': 'Freaky', 'released': 2020}>>
+"""
 
 # deleting data
 
+# delete relationship between two nodes
+query = "MATCH (p:Person) -[r:ACTED_IN]-> (m: Movie) " \
+        "WHERE p.name = 'Tom Hanks' AND m.title = 'Apollo 13' " \
+        "DELETE r"
+nodes = session.run(query)
+
+# remove node
+"""
+query = "MATCH (m:Movie) " \
+        "WHERE m.title = 'Apollo 13' " \
+        "DELETE m"
+nodes = session.run(query)
+
+warning: NOT POSSIBLE REMOVE NODES WITH RELATIONSHIP because make inconsistent graph
+DETACH DELETE remove first all relationship, and after remove node
+"""
+query = "MATCH (m:Movie) " \
+        "WHERE m.title = 'Apollo 13' " \
+        "DETACH DELETE m"
+nodes = session.run(query)
