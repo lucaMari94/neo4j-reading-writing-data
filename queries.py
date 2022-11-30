@@ -137,6 +137,92 @@ nodes = session.run(query)
 for node in nodes:
     print(node.get('p.name'), " - ", node.get('p.born'))
 
+
 """
     WRITING DATA TO NEO4J
+    Cypher command to create nodes: MERGE
+    Cypher command to create relationships: MERGE
 """
+# creating nodes
+# specify PRIMARY KEY (e.g. name: 'Tom Hanks')
+# if execute merge (create) multiple times -> not create node because already exist
+# Cypher command to create nodes: CREATE -> neo4j create node with property even if they already exist
+# best practise: MERGE
+query = "MERGE (p:Person {name: 'Tom Hanks'}) RETURN p"
+nodes = session.run(query)
+
+# creating relationships
+# Cypher command to create relationships: MERGE
+# you need references to 2 existing nodes
+# MATCH = RETRIEVE A NODE
+query = "MATCH (p:Person {name: 'Tom Hanks'}) " \
+        "MATCH (m:Movie {title: 'Apollo 13'})" \
+        "MERGE (p)-[r:ACTED_IN]->(m)"
+nodes = session.run(query)
+
+print('#############################################')
+query = "MATCH (p:Person {name: 'Tom Hanks'}) " \
+        "MATCH (m:Movie {title: 'Apollo 13'})" \
+        "MERGE (p)-[r:ACTED_IN {roles: ['Jim Lovell']}]->(m)"
+nodes = session.run(query)
+query = "MATCH (p:Person) -[r:ACTED_IN]-> (m: Movie) " \
+        "WHERE r.roles = ['Jim Lovell']" \
+        "RETURN p.name, m.title"
+nodes = session.run(query)
+for node in nodes:
+    print(node.get('p.name'), " - ", node.get('m.title'))
+
+print('#############################################')
+
+# update properties to nodes
+# Cypher command : SET
+# when create node, you must set property primary key for identifier node (e.g  {name: 'Tom Hanks'})
+query = "MERGE (p:Person {name: 'Tom Hanks'}) " \
+        "SET p.born = 1965 " \
+        "RETURN p"
+# SET command is used for, also, update property
+query = "MATCH (p:Person {name: 'Tom Hanks'}) " \
+        "SET p.born = 1966 " \
+        "RETURN p"
+nodes = session.run(query)
+query = "MATCH (p:Person) " \
+        "WHERE p.born = 1965 " \
+        "RETURN p"
+for node in nodes:
+    print(node)
+
+print('#############################################')
+# update properties to relationship
+query = "MATCH (p:Person {name: 'Tom Hanks'}) " \
+        "MATCH (m:Movie {title: 'Apollo 13'})" \
+        "MERGE (p)-[r:ACTED_IN]->(m) " \
+        "SET r.roles =['Forrest']"
+nodes = session.run(query)
+query = "MATCH (p:Person) -[r:ACTED_IN]-> (m: Movie) " \
+        "WHERE p.name = 'Tom Hanks' AND m.title = 'Apollo 13' " \
+        "RETURN p, m, r"
+nodes = session.run(query)
+for node in nodes:
+    print(node)
+
+# REMOVE properties to relationship: REMOVE r.role
+query = "MATCH (p:Person {name: 'Tom Hanks'}) " \
+        "MATCH (m:Movie {title: 'Apollo 13'})" \
+        "MERGE (p)-[r:ACTED_IN]->(m) " \
+        "REMOVE r.roles"
+nodes = session.run(query)
+# MATCH (p:Person) -[:ACTED_IN]-> (m: Movie) WHERE p.name = 'Tom Hanks' AND m.title = 'Apollo 13' return p, m
+query = "MATCH (p:Person) -[r:ACTED_IN]-> (m: Movie) " \
+        "WHERE p.name = 'Tom Hanks' AND m.title = 'Apollo 13' " \
+        "RETURN p, m, r"
+nodes = session.run(query)
+for node in nodes:
+    print(node)
+
+
+# merge processing
+
+# add or updating a Movie
+
+# deleting data
+
