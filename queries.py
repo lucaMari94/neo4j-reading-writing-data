@@ -411,6 +411,6 @@ END AS result
 # count()
 query = "MATCH (a:Person)-[:ACTED_IN]->(m:Movie)" \
         "WHERE a.name = ‘Tom Hanks’" \
-        "RETURN a.name AS actorNama, count(*) AS numMovies"
+        "RETURN a.name AS actorName, count(*) AS numMovies"
 nodes = session.run(query)
 
