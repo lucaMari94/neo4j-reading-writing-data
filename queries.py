@@ -406,3 +406,10 @@ CASE n.eyes
   ELSE 3
 END AS result
 """
+
+# AGGREGATION
+# count()
+query = "MATCH (a:Person)-[:ACTED_IN]->(m:Movie)" \
+"WHERE a.name = ‘Tom Hanks’" \
+"RETURN a.name AS actorNama, count(*) AS numMovies"
+nodes = session.run(query)
