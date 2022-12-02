@@ -272,3 +272,137 @@ query = "MATCH (m:Movie) " \
         "WHERE m.title = 'Apollo 13' " \
         "DETACH DELETE m"
 nodes = session.run(query)
+
+"""
+APOC
+CALL db.schema.visualization() = view data model
+CALL db.schema.nodeTypeProperties() = view property types for NODES
+CALL db.schema.relTypeProperties() = view property types for RELATIONSHIPS
+SHOW CONSTRAINTS = view the uniqueness constaint indexes in the graph
+"""
+
+# find all movies in which the actor "Tom Hanks" starred in 2023
+query = "MATCH (p:Person) – [:ACTED_IN]->(m:Movie)" \
+        "WHERE p.name = ‘Tom Hanks’" \
+        "AND m.year = 2023" \
+        "RETURN m.title"
+nodes = session.run(query)
+
+# test: return true or false
+query = "MATCH (m:Movie) WHERE m.title = ‘Toy Story’ " \
+      "RETURN " \
+      "m.year < 1995 AS lessThan" \
+      "m.year <= 1995 AS lessThanOrEqual" \
+      "m.year > 1995 AS moreThan" \
+      "m.year >= 1995 AS moreThanOrEqual"
+nodes = session.run(query)
+
+# IS NOT NULL / NULL
+query = "MATCH (p:Person) WHERE p.died IS NOT NULL AND p.born >= 1985 RETURN p.name, p.born, p.died"
+nodes = session.run(query)
+
+# verify if node has a label (p:Actor, p:Director)
+query = "MATCH (p:Person)" \
+        "WEHRE p.born.year > 1960" \
+        "AND p:Actor" \
+        "AND p:Director" \
+        "RETURN p. name, p.born, labels(p)"
+nodes = session.run(query)
+
+# find all people that have directed or acted in the same movie
+query = "MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p) " \
+        "WHERE p.born.year > 1960" \
+        "RETURN p.name, p.born, labels(p), m.title"
+nodes = session.run(query)
+
+# testing strings: starts with, ends with, contains
+# toLower(), toUpper()
+query = "MATCH (p:Person)" \
+        "WHERE toLower(p.name) ENDS WITH ‘demille" \
+        "RETURN p.name"
+nodes = session.run(query)
+
+"""
+EXPLAIN: verify how use the INDEX
+EXPLAIN MATCH (m:Movie)
+WHERE m.title STARS WITH ‘Toy Story’
+RETURN m.title, m.released
+"""
+
+"""
+PROFILE: show total rows number extract of query
+use for analyse performance of queries
+"""
+
+# order by
+# What is the youngest actor that acted in the most highly-rated movie?
+query = "MATCH (p:Person)-[:ACTED_IN]->(m:Movie)" \
+        "WHERE p.born.year IS NOT NULL" \
+        "AND m.imdbRating IS NOT NULL" \
+        "RETURN p.name, p.born.year, m.imdbRating" \
+        "ORDER BY m.imdbRating DESC, p.born.year DESC"
+nodes = session.run(query)
+
+# limit and skip
+query = "MATCH (:Movie) " \
+        "WHERE m.released IS NOT NULL " \
+        "RETURN m.title AS title, " \
+        "m.released AS releaseDate " \
+        "ORDER BY m.released DESC LIMIT 100"
+nodes = session.run(query)
+
+query = "MATCH (:Movie) " \
+        "WHERE m.released IS NOT NULL " \
+        "RETURN m.title AS title, " \
+        "m.released AS releaseDate " \
+        "ORDER BY m.released DESC SKIP 40 LIMIT 100"
+nodes = session.run(query)
+
+# distinct
+query = "MATCH (m:Movie)<-[:RATED]-()" \
+        "RETURN DISTINCT m.title"
+nodes = session.run(query)
+
+# What is the lowest imdbRating?
+query = "MATCH (m:Movie) " \
+        "WHERE m.imdbRating IS NOT NUL" \
+        "RETURN m.imdbRatin" \
+        "ORDER BY m.imdbRating LIMIT 1"
+nodes = session.run(query)
+
+# projections
+query = "MATCH (p:Person)" \
+        "WHERE p.name CONTAINS ‘Thomas’" \
+        "RETURN p {.*} AS person" \
+        "ORDER BY p.name ASC"
+nodes = session.run(query)
+
+query = "MATCH (p:Person)" \
+        "WHERE p.name CONTAINS ‘Thomas’" \
+        "RETURN p {.name, .born} AS person" \
+        "ORDER BY p.name ASC"
+nodes = session.run(query)
+
+# change results: date().year - p.born.year AS ageThisYear
+query = "MATCH (m:Movie)<-[:ACTED_IN]-(p:Person) " \
+        "WHERE m.title CONTAINS 'Toy Story' AND p.died IS NULL" \
+        "RETURN m.title AS movie, p.name AS actor, p.born AS dob," \
+        "date().year - p.born.year AS ageThisYear"
+nodes = session.run(query)
+
+# change results: CASE
+"""
+CASE test
+  WHEN value THEN result
+  [WHEN ...]
+  [ELSE default]
+END
+
+MATCH (n)
+RETURN
+CASE n.eyes
+  WHEN 'blue'  THEN 1
+  WHEN 'brown' THEN 2
+  ELSE 3
+END AS result
+"""
